@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouse Control</title>
+</head>
+<body>
+    <h1>Control the Mouse</h1>
+    <div>
+      <label>Scale:</label>
+      <input type="text" id="IP" value="10" oninput="onScaleChange()">
+    </div>
+    <button onclick="moveMouse(100, 200)">Move to (100, 200)</button>
+    
+    <!-- <button onclick="getPosition()">Get Mouse Position</button> -->
+    <br>
+    <button onclick="up()" style="height:150px; width:150px; margin-right: 40px; margin-bottom: 40px;">Up</button>
+    <button onclick="down()" style="height:150px; width:150px; margin-right: 40px;">Down</button>
+    <br>
+    <button onclick="left()" style="height:150px; width:150px; margin-right: 40px; margin-bottom: 40px;">Letf</button>
+    <button onclick="right()" style="height:150px; width:150px; margin-right: 40px;">Right</button>
+    <br>
+    <button onclick="clickMouse()" style="height:150px; width:400px; margin-right: 40px;">Click Mouse</button>
+    <br>
+    <canvas id="canvas" width="400px" height="500px" style="border:solid black 1px;">
+      Your browser does not support canvas element.
+    </canvas>
+    <br />
+    Log:
+    <pre id="log" style="border: 1px solid #ccc;"></pre>
+    <script>
+        function up(){
+            fetch(
+                "http://".concat(window.location.host).concat("/up")
+            )
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function down(){
+            fetch(
+                "http://".concat(window.location.host).concat("/down")
+            )
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function left(){
+            fetch(
+                "http://".concat(window.location.host).concat("/left")
+            )
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function right(){
+            fetch(
+                "http://".concat(window.location.host).concat("/right")
+            )
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function onScaleChange(){
+            fetch(
+                "http://".concat(window.location.host).concat("/scale")
+                , {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ s: document.getElementById("IP").value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                document.getElementById("IP").value = data["scale"]
+            });
+        }
+        function moveMouse(x, y) {
+            fetch(
+                // 'http://localhost:5000/move_mouse'
+                "http://".concat(window.location.host).concat("/move_mouse")
+                , {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ x: x, y: y })
+            })
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function clickMouse() {
+            console.log(document.getElementById("IP").value)
+            console.log("http://".concat(document.getElementById("IP").value).concat(":5000/click_mouse"))
+            console.log(window.location.host)
+            console.log("http://".concat(window.location.host).concat("/click_mouse"))
+            fetch(
+                // 'http://localhost:5000/click_mouse'
+                "http://".concat(window.location.host).concat("/click_mouse")
+                , {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function getPosition() {
+            fetch(
+                // 'http://localhost:5000/get_position'
+                "http://".concat(window.location.host).concat("/get_position")
+                )
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function log(msg) {
+          const container = document.getElementById("log");
+          //container.textContent = `${msg} \n${container.textContent}`;
+        }
+        const ongoingTouches = [];
+        function ongoingTouchIndexById(idToFind) {
+          for (let i = 0; i < ongoingTouches.length; i++) {
+            const id = ongoingTouches[i].identifier;
+
+            if (id === idToFind) {
+              return i;
+            }
+          }
+          return -1; // not found
+        }
+        function copyTouch({ identifier, pageX, pageY }) {
+          return { identifier, pageX, pageY,  };
+        }
+        function testclick(){
+          log("click");
+        }
+        function handleStart(evt) {
+          evt.preventDefault();
+          log("touchstart.");
+          const touches = evt.changedTouches;
+          for (let i = 0; i < touches.length; i++) {
+            ongoingTouches.push(copyTouch(touches[i]));
+          }
+        }
+        function handleMove(evt) {
+          evt.preventDefault();
+          const touches = evt.changedTouches;
+
+          for (let i = 0; i < touches.length; i++) {
+            const idx = ongoingTouchIndexById(touches[i].identifier);
+
+            if (idx >= 0) {
+              log(`continuing touch ${idx}`);
+              moveMouse(touches[i].pageX - ongoingTouches[idx].pageX,
+                        touches[i].pageY - ongoingTouches[idx].pageY);
+
+              ongoingTouches.splice(idx, 1, copyTouch(touches[i])); // swap in the new touch record
+            } else {
+              log("can't figure out which touch to continue");
+            }
+          }
+        }
+        function handleEnd(evt) {
+          evt.preventDefault(); //prevent browser continuing to process the touch event
+          log(`touchend.`);
+          const touches = evt.changedTouches;
+          for (let i = 0; i < touches.length; i++) {
+            let idx = ongoingTouchIndexById(touches[i].identifier);
+
+            //log(`ctx.moveTo( ${ongoingTouches[idx].pageX}, ${ongoingTouches[idx].pageY} );`);
+            //log(`ctx.lineTo( ${touches[i].pageX}, ${touches[i].pageY} );`);
+            if (idx >= 0) {
+              // moveMouse(touches[i].pageX - ongoingTouches[idx].pageX,
+              //           touches[i].pageY - ongoingTouches[idx].pageY);
+              ongoingTouches.splice(idx, 1); // remove it; we're done
+            } else {
+              log("can't figure out which touch to end");
+            }
+          }
+        }
+        function startTouchDetec() {
+          log(`Browser width: ${window.innerWidth}, height: ${window.innerHeight}`);
+          //notebook screen size:(1522,792)
+          const el = document.getElementById("canvas");
+          el.addEventListener("touchstart", handleStart);
+          el.addEventListener("touchend", handleEnd);
+          // el.addEventListener("touchcancel", handleCancel);
+          el.addEventListener("touchmove", handleMove);
+          el.addEventListener("click", testclick);
+        }
+
+        document.addEventListener("DOMContentLoaded", startTouchDetec);
+    </script>
+</body>
+</html>
