@@ -30,6 +30,8 @@
     Log:
     <pre id="log" style="border: 1px solid #ccc;"></pre>
     <script>
+        const ongoingTouches = [];
+        var touchStartX;
         function log(msg) {
           const container = document.getElementById("log");
           //container.textContent = `${msg} \n${container.textContent}`;
@@ -107,6 +109,7 @@
             .then(data => console.log(data));
         }
         function clickMouse() {
+            log("clickMouse")
             console.log(document.getElementById("IP").value)
             console.log("http://".concat(document.getElementById("IP").value).concat(":5000/click_mouse"))
             console.log(window.location.host)
@@ -128,7 +131,6 @@
             .then(response => response.json())
             .then(data => console.log(data));
         }
-        const ongoingTouches = [];
         function ongoingTouchIndexById(idToFind) {
           for (let i = 0; i < ongoingTouches.length; i++) {
             const id = ongoingTouches[i].identifier;
@@ -151,6 +153,9 @@
           for (let i = 0; i < touches.length; i++) {
             ongoingTouches.push(copyTouch(touches[i]));
           }
+          if(touches.length == 1){
+            touchStartX = touches[0].pageX;
+          }
         }
         function handleMove(evt) {
           evt.preventDefault();
@@ -164,7 +169,7 @@
               log(`ongoingTouches length=${ongoingTouches.length}`);
           }
           else if( touches.length == 2 ){
-            //scroll
+            log("scroll");
             var diffY = 0;
             for (let i = 0; i < touches.length; i++) {
                 const ongoingIdx = ongoingTouchIndexById(touches[i].identifier);
@@ -172,7 +177,6 @@
                   diffY = diffY + touches[i].pageY - ongoingTouches[ongoingIdx].pageY;
                   //log(`continuing scroll ${ongoingIdx}|diffY=${diffY}`);
                   ongoingTouches.splice(ongoingIdx, 1, copyTouch(touches[i])); // swap in the new touch record
-                  log(`ongoingTouches length=${ongoingTouches.length}`);
                 } else {
                   log(`not valid ongoingIdx=${ongoingIdx}`);
                 }
@@ -186,14 +190,15 @@
           evt.preventDefault(); //prevent browser continuing to process the touch event
           log(`touchend.`);
           const touches = evt.changedTouches;
+          if(touches.length == 1 && touchStartX == touches[0].pageX){
+            clickMouse();
+          }
+          //Must do this, clean ongoingTouches
           for (let i = 0; i < touches.length; i++) {
             let idx = ongoingTouchIndexById(touches[i].identifier);
-
             //log(`ctx.moveTo( ${ongoingTouches[idx].pageX}, ${ongoingTouches[idx].pageY} );`);
             //log(`ctx.lineTo( ${touches[i].pageX}, ${touches[i].pageY} );`);
             if (idx >= 0) {
-              // moveMouse(touches[i].pageX - ongoingTouches[idx].pageX,
-              //           touches[i].pageY - ongoingTouches[idx].pageY);
               ongoingTouches.splice(idx, 1); // remove it; we're done
             } else {
               log("can't figure out which touch to end");
