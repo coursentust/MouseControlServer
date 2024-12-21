@@ -105,6 +105,18 @@ def move_mouse():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/scroll', methods=['POST'])
+def scroll():
+    try:
+        data = request.get_json()
+        y = data.get('y')
+        if y is not None:
+            pyautogui.scroll(int(y))
+            return jsonify({"status": "success", "message": f"scroll ({y})"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Invalid scroll"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/click_mouse', methods=['POST','GET'])
 def click_mouse():
