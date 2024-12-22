@@ -12,17 +12,28 @@
       <input type="text" id="IP" value="10" oninput="onScaleChange()">
     </div>
     <button onclick="moveMouse(100, 200)">Move to (100, 200)</button>
-    
+
     <!-- <button onclick="getPosition()">Get Mouse Position</button> -->
     <br>
+
     <button onclick="up()" style="height:150px; width:150px; margin-right: 40px; margin-bottom: 40px;">Up</button>
     <button onclick="down()" style="height:150px; width:150px; margin-right: 40px;">Down</button>
     <br>
+
     <button onclick="left()" style="height:150px; width:150px; margin-right: 40px; margin-bottom: 40px;">Letf</button>
     <button onclick="right()" style="height:150px; width:150px; margin-right: 40px;">Right</button>
     <br>
-    <button onclick="clickMouse()" style="height:150px; width:400px; margin-right: 40px;">Click Mouse</button>
+
+    <button onclick="clickMouse()" style="height:150px; width:400px; margin-right: 40px; margin-bottom: 5px;">Click Mouse</button>
     <br>
+
+    <button onclick="esc()"        style="height:40px; width:150px; margin-right: 40px; margin-bottom: 5px;">ESC</button>
+    <button onclick="fullscreen()" style="height:40px; width:150px; margin-right: 40px;">FullSreen</button>
+    <br>
+
+    <input type="text" id="text" style="padding:5px 0; margin-bottom: 5px;" size="45px" onblur="textOnBlur()" placeholder="  type"/>
+    <br>
+
     <canvas id="touchpad" width="400px" height="500px" style="border:solid black 1px;">
       Your browser does not support canvas element.
     </canvas>
@@ -128,6 +139,49 @@
                 // 'http://localhost:5000/get_position'
                 "http://".concat(window.location.host).concat("/get_position")
                 )
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function esc(){
+            fetch(
+                // 'http://localhost:5000/sendkey'
+                "http://".concat(window.location.host).concat("/sendkey")
+                , {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({k:'esc'})
+            })
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function fullscreen(){
+            fetch(
+                // 'http://localhost:5000/sendkey'
+                "http://".concat(window.location.host).concat("/sendkey")
+                , {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({k:'f'})
+            })
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function textOnBlur() {
+            const el = document.getElementById("text");
+            fetch(
+                // 'http://localhost:5000/sendtext'
+                "http://".concat(window.location.host).concat("/sendtext")
+                , {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({text:el.value})
+            })
             .then(response => response.json())
             .then(data => console.log(data));
         }

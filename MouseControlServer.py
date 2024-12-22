@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import pyautogui
+from pandas.io.clipboard import clipboard_get, clipboard_set
 
 app = Flask(__name__)
 
@@ -132,6 +133,32 @@ def get_position():
     try:
         x, y = pyautogui.position()
         return jsonify({"status": "success", "position": {"x": x, "y": y}}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/sendkey', methods=['POST'])
+def sendkey():
+    try:
+        data = request.get_json()
+        k = data.get('k')
+        if k is None:
+            return jsonify({"status": "error", "message": "Invalid key"}), 400
+
+        pyautogui.press(k)
+        return jsonify({"status": "success", "message": f"press ({k})"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/sendtext', methods=['POST'])
+def sendtext():
+    try:
+        data = request.get_json()
+        text = data.get('text')
+        if text is None:
+            return jsonify({"status": "error", "message": "Invalid text"}), 400
+
+        clipboard_set(text)
+        return jsonify({"status": "success", "message": f"set clipboard ({text})"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
