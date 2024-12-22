@@ -127,7 +127,6 @@ def click_mouse():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-
 @app.route('/get_position', methods=['GET'])
 def get_position():
     try:
@@ -159,6 +158,30 @@ def sendtext():
 
         clipboard_set(text)
         return jsonify({"status": "success", "message": f"set clipboard ({text})"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/cleartext', methods=['GET'])
+def cleartext():
+    try:
+        pyautogui.hotkey('ctrl', 'a', 'backspace')
+        return jsonify({"status": "success", "cleartext": "cleartext"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/paste', methods=['GET'])
+def paste():
+    try:
+        pyautogui.hotkey('ctrl','v')
+        return jsonify({"status": "success", "paste": "paste"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/enter', methods=['GET'])
+def enter():
+    try:
+        pyautogui.press('enter')
+        return jsonify({"status": "success", "enter": "enter"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

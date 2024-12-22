@@ -27,8 +27,25 @@
     <button onclick="clickMouse()" style="height:150px; width:400px; margin-right: 40px; margin-bottom: 5px;">Click Mouse</button>
     <br>
 
-    <button onclick="esc()"        style="height:40px; width:150px; margin-right: 40px; margin-bottom: 5px;">ESC</button>
-    <button onclick="fullscreen()" style="height:40px; width:150px; margin-right: 40px;">FullSreen</button>
+    <button onclick="esc()"       style="height:40px; width:60px; margin-right: 4px; margin-bottom: 5px;">ESC</button>
+    <button onclick="fullscreen()" style="height:40px; width:60px;
+                                          margin-right: 4px; margin-bottom: 5px;
+                                          padding-left: 2px;
+                                          font-size:12px;">FullSreen</button>
+    <button onclick="cleartext()" style="height:40px; width:60px;
+                                         margin-right: 4px; margin-bottom: 5px;
+                                         background-color: #04AA6D;
+                                        ">clear</button>
+    <button onclick="paste()" style="height:40px; width:60px;
+                                     margin-right: 4px; margin-bottom: 5px;
+                                     background-color: #04AA6D;
+                                    ">paste</button>
+    <button onclick="enter()" style="height:40px; width:60px;
+                                     margin-right: 4px; margin-bottom: 5px;
+                                     padding-left: 2px;
+                                     font-size:12px;
+                                     background-color: #04AA6D;
+                                    ">enter</button>
     <br>
 
     <input type="text" id="text" style="padding:5px 0; margin-bottom: 5px;" size="45px" onblur="textOnBlur()" placeholder="  type"/>
@@ -182,6 +199,30 @@
                 },
                 body: JSON.stringify({text:el.value})
             })
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function cleartext(){
+            fetch(
+                // 'http://localhost:5000/cleartext'
+                "http://".concat(window.location.host).concat("/cleartext")
+                )
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function paste(){
+            fetch(
+                // 'http://localhost:5000/paste'
+                "http://".concat(window.location.host).concat("/paste")
+                )
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+        function enter(){
+            fetch(
+                // 'http://localhost:5000/enter'
+                "http://".concat(window.location.host).concat("/enter")
+                )
             .then(response => response.json())
             .then(data => console.log(data));
         }
