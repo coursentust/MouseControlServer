@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mouse Control</title>
+
+    <style>
+        .multi-buttons{
+            margin-bottom: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+/*            gap: 5px;*/
+/*            flex: 0 0 auto;*/
+        }
+        .green{ background-color: #04AA6D; }
+        .button-row{
+            flex-basis: 5em;
+            height:40px;
+        }
+    </style>
 </head>
 <body>
     <h1>Control the Mouse</h1>
@@ -11,52 +27,52 @@
       <label>Scale:</label>
       <input type="text" id="IP" value="10" oninput="onScaleChange()">
     </div>
-    <button onclick="moveMouse(100, 200)">Move to (100, 200)</button>
 
-    <!-- <button onclick="getPosition()">Get Mouse Position</button> -->
-    <br>
+    <div>
+        <button onclick="moveMouse(100, 200)">Move to (100, 200)</button>
+        <!-- <button onclick="getPosition()">Get Mouse Position</button> -->
+    </div>
 
-    <button onclick="up()" style="height:150px; width:150px; margin-right: 40px; margin-bottom: 40px;">Up</button>
-    <button onclick="down()" style="height:150px; width:150px; margin-right: 40px;">Down</button>
-    <br>
+    <div>
+        <button onclick="up()" style="height:150px; width:150px; margin-right: 40px; margin-bottom: 40px;">Up</button>
+        <button onclick="down()" style="height:150px; width:150px; margin-right: 40px;">Down</button>
+    </div>
 
-    <button onclick="left()" style="height:150px; width:150px; margin-right: 40px; margin-bottom: 40px;">Letf</button>
-    <button onclick="right()" style="height:150px; width:150px; margin-right: 40px;">Right</button>
-    <br>
+    <div>
+        <button onclick="left()" style="height:150px; width:150px; margin-right: 40px; margin-bottom: 20px;">Letf</button>
+        <button onclick="right()" style="height:150px; width:150px; margin-right: 40px;">Right</button>
+    </div>
 
-    <button onclick="clickMouse()" style="height:150px; width:400px; margin-right: 40px; margin-bottom: 5px;">Click Mouse</button>
-    <br>
+    <div>
+        <button onclick="clickMouse()" style="height:150px; width:400px; margin-right: 40px; margin-bottom: 5px;">Click Mouse</button>
+    </div>
 
-    <button onclick="esc()"       style="height:40px; width:60px; margin-right: 4px; margin-bottom: 5px;">ESC</button>
-    <button onclick="fullscreen()" style="height:40px; width:60px;
-                                          margin-right: 4px; margin-bottom: 5px;
-                                          padding-left: 2px;
-                                          font-size:12px;">FullSreen</button>
-    <button onclick="cleartext()" style="height:40px; width:60px;
-                                         margin-right: 4px; margin-bottom: 5px;
-                                         background-color: #04AA6D;
-                                        ">clear</button>
-    <button onclick="paste()" style="height:40px; width:60px;
-                                     margin-right: 4px; margin-bottom: 5px;
-                                     background-color: #04AA6D;
-                                    ">paste</button>
-    <button onclick="enter()" style="height:40px; width:60px;
-                                     margin-right: 4px; margin-bottom: 5px;
-                                     padding-left: 2px;
-                                     font-size:12px;
-                                     background-color: #04AA6D;
-                                    ">enter</button>
-    <br>
+    <!--
+    border-style: outset;
+    margin: 0;
+    padding: 0;
+    -->
+    <div class="multi-buttons" style="width:400px;">
+        <button class="button-row" onclick="esc()">ESC</button>
+        <button class="button-row" onclick="fullscreen()">FullSreen</button>
+        <button class="button-row green" onclick="cleartext()">clear</button>
+        <button class="button-row green" onclick="paste()">paste</button>
+        <button class="button-row green" onclick="enter()">enter</button>
+    </div>
 
-    <input type="text" id="text" style="padding:5px 0; margin-bottom: 5px;" size="45px" onblur="textOnBlur()" placeholder="  type"/>
-    <br>
+    <div>
+        <input type="text" id="text" style="margin-bottom: 5px; font-size:24px; width: 300px;" onblur="textOnBlur()" placeholder="  type"/>
+    </div>
 
-    <canvas id="touchpad" width="400px" height="500px" style="border:solid black 1px;">
-      Your browser does not support canvas element.
-    </canvas>
-    <br />
+    <div>
+        <canvas id="touchpad" width="400px" height="500px" style="border:solid black 1px;">
+          Your browser does not support canvas element.
+        </canvas>
+    </div>
     Log:
-    <pre id="log" style="border: 1px solid #ccc;"></pre>
+    <div>
+        <pre id="log" style="border: 1px solid #ccc;"></pre>
+    </div>
     <script>
         const ongoingTouches = [];
         var touchStartX;
