@@ -52,16 +52,18 @@
     padding: 0;
     margin-bottom: 20px;
   -->
-  <div class="multi-buttons" >
+  <div class="multi-buttons">
+    <button class="button" onclick="backpage()">backpage</button>
     <button class="button" onclick="esc()">ESC</button>
     <button class="button" onclick="fullscreen()">FullSreen</button>
-    <button class="button green" onclick="cleartext()">clear</button>
-    <button class="button green" onclick="paste()">paste</button>
-    <button class="button green" onclick="enter()">enter</button>
   </div>
 
-  <div>
-    <input type="text" id="text" style="margin-bottom: 5px; font-size:24px; width: 300px;" onblur="textOnBlur()" placeholder="  type"/>
+  <div class="multi-buttons">
+    <!-- margin-bottom: 5px; width: 300px;  font-size:24px; -->
+    <input type="text" id="text" style="" onblur="textOnBlur()" placeholder="  type"/>
+    <button class="button green" onclick="cleartext()">clearAll</button>
+    <button class="button green" onclick="paste()">paste</button>
+    <button class="button green" onclick="enter()">enter</button>
   </div>
 
   <div id="touchpad"style="border:solid black 1px; width: 100%; height: 500px"></div>
@@ -165,10 +167,12 @@
         .then(data => console.log(data));
     }
     function getPosition() {
-        fetch(
-            // 'http://localhost:5000/get_position'
-            "http://".concat(window.location.host).concat("/get_position")
-            )
+        fetch( "http://".concat(window.location.host).concat("/get_position") )
+        .then(response => response.json())
+        .then(data => console.log(data));
+    }
+    function backpage(){
+        fetch( "http://".concat(window.location.host).concat("/backpage") )
         .then(response => response.json())
         .then(data => console.log(data));
     }

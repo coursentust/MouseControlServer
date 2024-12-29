@@ -161,6 +161,14 @@ def sendtext():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/enter', methods=['GET'])
+def enter():
+    try:
+        pyautogui.press('enter')
+        return jsonify({"status": "success", "enter": "enter"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route('/cleartext', methods=['GET'])
 def cleartext():
     try:
@@ -177,11 +185,11 @@ def paste():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route('/enter', methods=['GET'])
-def enter():
+@app.route('/backpage', methods=['GET'])
+def backpage():
     try:
-        pyautogui.press('enter')
-        return jsonify({"status": "success", "enter": "enter"}), 200
+        pyautogui.hotkey('alt','left')
+        return jsonify({"status": "success", "backpage": "backpage"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
