@@ -21,10 +21,9 @@
 </head>
 <body>
   <h1>Control the Mouse</h1>
-  <div>
-    <label>Scale:</label>
-    <input type="text" id="IP" value="10" oninput="onScaleChange()">
-  </div>
+
+  <div><label>Scale:</label> <input type="text" id="IP" value="10" oninput="onScaleChange()"></div>
+  <div><label>TouchpadInterval:</label> <input type="text" id="touchpadinterval" value="10" oninput="onTouchpadIntervalChange()"></div>
 
   <div>
     <button onclick="moveMouse(100, 200)">Move to (100, 200)</button>
@@ -75,6 +74,7 @@
   <script>
     const ongoingTouches = [];
     var touchStartX;
+    var tuochpadInterval = 10;
     function log(msg) {
         const container = document.getElementById("log");
         //container.textContent = `${msg} \n${container.textContent}`;
@@ -106,6 +106,9 @@
         )
         .then(response => response.json())
         .then(data => console.log(data));
+    }
+    function onTouchpadIntervalChange(){
+        tuochpadInterval = document.getElementById("touchpadinterval").value
     }
     function onScaleChange(){
         fetch(
@@ -269,11 +272,11 @@
         touchStartX = touches[0].pageX;
       }
     }
-    function throttle(func, interval) {
+    function throttle(func) {
         let lastCall = 0;
         return function (...args) {
             const now = Date.now();
-            if (now - lastCall >= interval) {
+            if (now - lastCall >= tuochpadInterval) {
                 lastCall = now;
                 func.apply(this, args);
             }
@@ -335,7 +338,7 @@
       el.addEventListener("touchstart", handleStart);
       el.addEventListener("touchend", handleEnd);
       // el.addEventListener("touchcancel", handleCancel);
-      el.addEventListener("touchmove", throttle(handleMove, 10));//ms
+      el.addEventListener("touchmove", throttle(handleMove));//ms
       el.addEventListener("click", testclick);
     }
 
