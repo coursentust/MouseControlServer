@@ -99,7 +99,9 @@ def move_mouse():
         y = data.get('y')
         cur_x, cur_y = pyautogui.position()
         if x is not None and y is not None:
-            pyautogui.moveTo( cur_x + x, cur_y + y )
+            maxX, maxY = pyautogui.size()[0] -2, pyautogui.size()[1] -2
+            newX, newY = min(cur_x + x, maxX), min(cur_y + y, maxY)
+            pyautogui.moveTo( newX, newY )
             return jsonify({"status": "success", "message": f"Mouse moved to ({x}, {y})   {pyautogui.position()}"}), 200
         else:
             return jsonify({"status": "error", "message": "Invalid coordinates"}), 400
