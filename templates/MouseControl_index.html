@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mouse Control</title>
 
-  <style>
-    .multi-buttons{
-      margin-bottom: 5px;
-      display: flex;
-      justify-content: space-between;
-      gap: 5px;
-    }
-    .green{ background-color: #04AA6D; }
-    .button{
-      width: 50%;
-      aspect-ratio: 2;
-    }
-  </style>
+<style>
+  .green{
+    background-color: #04AA6D;
+  }
+  .multi-buttons{
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+  }
+  .button{
+    width: 50%;
+    aspect-ratio: 2;
+  }
+</style>
 </head>
 <body>
   <h1>Control the Mouse</h1>
@@ -25,20 +27,20 @@
   <div><label>Scale:</label> <input type="text" id="IP" value="10" oninput="onScaleChange()"></div>
   <div><label>TouchpadInterval:</label> <input type="text" id="touchpadinterval" value="10" oninput="onTouchpadIntervalChange()"></div>
 
-  <div>
-    <button onclick="moveMouse(100, 200)">Move to (100, 200)</button>
+  <div class="multi-buttons">
+    <button class="button" onclick="moveMouse(100, 200)">Move to (100, 200)</button>
     <!-- <button onclick="getPosition()">Get Mouse Position</button> -->
+    <button class="button" onclick="sendkey({k:'volumedown'})">SysVolDn</button>
+    <button class="button" onclick="sendkey({k:'volumeup'})">SysVolUp</button>
   </div>
 
-  <div style="display: flex; flex-direction: column;">
-    <div class="multi-buttons">
-      <button class="button" onclick="up()" >Up</button>
-      <button class="button" onclick="down()" >Down</button>
-    </div>
-    <div class="multi-buttons">
-      <button class="button" onclick="left()" >Letf</button>
-      <button class="button" onclick="right()" >Right</button>
-    </div>
+  <div class="multi-buttons">
+    <button class="button" onclick="down()" >Down</button>
+    <button class="button" onclick="up()" >Up</button>
+  </div>
+  <div class="multi-buttons">
+    <button class="button" onclick="left()" >Letf</button>
+    <button class="button" onclick="right()" >Right</button>
   </div>
 
   <div>
@@ -51,18 +53,26 @@
     padding: 0;
     margin-bottom: 20px;
   -->
-  <div class="multi-buttons">
-    <button class="button" onclick="backpage()">backpage</button>
-    <button class="button" onclick="esc()">ESC</button>
-    <button class="button" onclick="fullscreen()">FullSreen</button>
-  </div>
 
   <div class="multi-buttons">
     <!-- margin-bottom: 5px; width: 300px;  font-size:24px; -->
     <input type="text" id="text" style="" onblur="textOnBlur()" placeholder="  type"/>
-    <button class="button green" onclick="cleartext()">clearAll</button>
-    <button class="button green" onclick="paste()">paste</button>
-    <button class="button green" onclick="enter()">enter</button>
+    <button class="button green" onclick="sendkey({hk:['ctrl', 'a', 'backspace']})">clearAll</button>
+    <button class="button green" onclick="sendkey({hk:['ctrl', 'v']})">paste</button>
+    <button class="button green" onclick="sendkey({k:'enter'})">enter</button>
+  </div>
+
+  <div class="multi-buttons">
+    <button class="button" onclick="sendkey({hk:['alt','left']})">Backpage</button>
+    <button class="button" onclick="sendkey({k:'esc'})">ESC</button>
+    <button class="button" onclick="sendkey({k:'f'})">FullSreen</button>
+  </div>
+
+  <div class="multi-buttons">
+    <button class="button" onclick="sendkey({k:['left']})">&larr;</button>
+    <button class="button" onclick="sendkey({k:['down']})">&darr;</button>
+    <button class="button" onclick="sendkey({k:['up']})">&uarr;</button>
+    <button class="button" onclick="sendkey({k:['right']})">&rarr;</button>
   </div>
 
   <div id="touchpad"style="border:solid black 1px; width: 100%; height: 500px"></div>
@@ -74,7 +84,12 @@
   <script>
     const ongoingTouches = [];
     var touchStartX;
-    var tuochpadInterval = 10;
+    var tuochpadInterval = localStorage['tuochpadInterval'];
+    if( tuochpadInterval == undefined){
+        tuochpadInterval = 10
+    }else{
+        document.getElementById("touchpadinterval").value = tuochpadInterval
+    }
     function log(msg) {
         const container = document.getElementById("log");
         //container.textContent = `${msg} \n${container.textContent}`;
@@ -109,6 +124,7 @@
     }
     function onTouchpadIntervalChange(){
         tuochpadInterval = document.getElementById("touchpadinterval").value
+        localStorage['tuochpadInterval'] = tuochpadInterval;
     }
     function onScaleChange(){
         fetch(
@@ -174,12 +190,7 @@
         .then(response => response.json())
         .then(data => console.log(data));
     }
-    function backpage(){
-        fetch( "http://".concat(window.location.host).concat("/backpage") )
-        .then(response => response.json())
-        .then(data => console.log(data));
-    }
-    function esc(){
+    function sendkey(key){
         fetch(
             // 'http://localhost:5000/sendkey'
             "http://".concat(window.location.host).concat("/sendkey")
@@ -188,21 +199,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({k:'esc'})
-        })
-        .then(response => response.json())
-        .then(data => console.log(data));
-    }
-    function fullscreen(){
-        fetch(
-            // 'http://localhost:5000/sendkey'
-            "http://".concat(window.location.host).concat("/sendkey")
-            , {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({k:'f'})
+            body: JSON.stringify(key)
         })
         .then(response => response.json())
         .then(data => console.log(data));
@@ -222,30 +219,6 @@
         .then(response => response.json())
         .then(data => console.log(data));
     }
-    function cleartext(){
-        fetch(
-            // 'http://localhost:5000/cleartext'
-            "http://".concat(window.location.host).concat("/cleartext")
-            )
-        .then(response => response.json())
-        .then(data => console.log(data));
-    }
-    function paste(){
-        fetch(
-            // 'http://localhost:5000/paste'
-            "http://".concat(window.location.host).concat("/paste")
-            )
-        .then(response => response.json())
-        .then(data => console.log(data));
-    }
-    function enter(){
-        fetch(
-            // 'http://localhost:5000/enter'
-            "http://".concat(window.location.host).concat("/enter")
-            )
-        .then(response => response.json())
-        .then(data => console.log(data));
-    }
     function ongoingTouchIndexById(idToFind) {
       for (let i = 0; i < ongoingTouches.length; i++) {
         const id = ongoingTouches[i].identifier;
@@ -257,9 +230,6 @@
     }
     function copyTouch({ identifier, pageX, pageY }) {
       return { identifier, pageX, pageY,  };
-    }
-    function testclick(){
-      log("click");
     }
     function handleStart(evt) {
       evt.preventDefault();
@@ -339,7 +309,6 @@
       el.addEventListener("touchend", handleEnd);
       // el.addEventListener("touchcancel", handleCancel);
       el.addEventListener("touchmove", throttle(handleMove));//ms
-      el.addEventListener("click", testclick);
     }
 
     //stop function define

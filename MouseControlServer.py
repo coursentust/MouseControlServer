@@ -140,10 +140,13 @@ def sendkey():
     try:
         data = request.get_json()
         k = data.get('k')
-        if k is None:
+        hk = data.get('hk')
+        if k is not None:
+            pyautogui.press(k)
+        elif hk is not None:
+            pyautogui.hotkey(hk)
+        else:
             return jsonify({"status": "error", "message": "Invalid key"}), 400
-
-        pyautogui.press(k)
         return jsonify({"status": "success", "message": f"press ({k})"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -158,38 +161,6 @@ def sendtext():
 
         clipboard_set(text)
         return jsonify({"status": "success", "message": f"set clipboard ({text})"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/enter', methods=['GET'])
-def enter():
-    try:
-        pyautogui.press('enter')
-        return jsonify({"status": "success", "enter": "enter"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/cleartext', methods=['GET'])
-def cleartext():
-    try:
-        pyautogui.hotkey('ctrl', 'a', 'backspace')
-        return jsonify({"status": "success", "cleartext": "cleartext"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/paste', methods=['GET'])
-def paste():
-    try:
-        pyautogui.hotkey('ctrl','v')
-        return jsonify({"status": "success", "paste": "paste"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/backpage', methods=['GET'])
-def backpage():
-    try:
-        pyautogui.hotkey('alt','left')
-        return jsonify({"status": "success", "backpage": "backpage"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
