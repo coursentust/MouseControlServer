@@ -6,6 +6,9 @@
   <title>Mouse Control</title>
 
 <style>
+  html, body {
+    overscroll-behavior-x: none;
+  }
   .green{
     background-color: #04AA6D;
   }
@@ -24,7 +27,7 @@
 <body>
   <h1>Control the Mouse</h1>
 
-  <div><label>Scale:</label> <input type="text" id="IP" value="10" oninput="onScaleChange()"></div>
+  <div><label>mouseStep:</label> <input type="text" id="IP" value="10" oninput="onScaleChange()"></div>
   <div><label>TouchpadInterval:</label> <input type="text" id="touchpadinterval" value="10" oninput="onTouchpadIntervalChange()"></div>
 
   <div class="multi-buttons">
@@ -57,9 +60,9 @@
   <div class="multi-buttons">
     <!-- margin-bottom: 5px; width: 300px;  font-size:24px; -->
     <input type="text" id="text" style="" onblur="textOnBlur()" placeholder="  type"/>
-    <button class="button green" onclick="sendkey({hk:['ctrl', 'a', 'backspace']})">clearAll</button>
     <button class="button green" onclick="sendkey({hk:['ctrl', 'v']})">paste</button>
     <button class="button green" onclick="sendkey({k:'enter'})">enter</button>
+    <button class="button green" onclick="sendkey({hk:['ctrl', 'a', 'backspace']})">clearAll</button>
   </div>
 
   <div class="multi-buttons">
@@ -174,8 +177,6 @@
     }
     function clickMouse() {
         log("clickMouse")
-        console.log(document.getElementById("IP").value)
-        console.log("http://".concat(document.getElementById("IP").value).concat(":5000/click_mouse"))
         console.log(window.location.host)
         console.log("http://".concat(window.location.host).concat("/click_mouse"))
         fetch(

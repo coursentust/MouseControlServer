@@ -91,16 +91,26 @@ def scale():
         return jsonify({"status": "error", "message": str(e), "scale":f"{SCALE}"}), 500
 
 
+def f(xaxis):
+    # return 0.02 * math.atan(xaxis)+1
+    return  0.5 * (3.1415 / 4) * (xaxis * (1.0593068 + 0.1449821 * xaxis**2)) / (1 + 1.2723328 * xaxis**2) + 1
+maxX, maxY = pyautogui.size()[0] -2, pyautogui.size()[1] -2
 @app.route('/move_mouse', methods=['POST'])
 def move_mouse():
     try:
         data = request.get_json()
         x = data.get('x')
         y = data.get('y')
-        cur_x, cur_y = pyautogui.position()
         if x is not None and y is not None:
-            maxX, maxY = pyautogui.size()[0] -2, pyautogui.size()[1] -2
-            newX, newY = min(cur_x + x, maxX), min(cur_y + y, maxY)
+            cur_x, cur_y = pyautogui.position()
+            scaleX = f(abs(x))
+            scaleY = f(abs(y))
+            x *= scaleX
+            y *= scaleY
+
+            newX, newY = cur_x + x, cur_y + y
+            newX, newY = min(max(newX, 1), maxX), min(max(newY, 1), maxY)
+
             pyautogui.moveTo( newX, newY )
             return jsonify({"status": "success", "message": f"Mouse moved to ({x}, {y})   {pyautogui.position()}"}), 200
         else:
@@ -141,15 +151,15 @@ def get_position():
 def sendkey():
     try:
         data = request.get_json()
-        k = data.get('k')
-        hk = data.get('hk')
-        if k is not None:
-            pyautogui.press(k)
-        elif hk is not None:
-            pyautogui.hotkey(hk)
+        key = data.get('k')
+        hotkey = data.get('hk')
+        if key is not None:
+            pyautogui.press(key)
+        elif hotkey is not None:
+            pyautogui.hotkey(hotkey)
         else:
             return jsonify({"status": "error", "message": "Invalid key"}), 400
-        return jsonify({"status": "success", "message": f"press ({k})"}), 200
+        return jsonify({"status": "success", "message": f"press ({key},{hotkey})"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
