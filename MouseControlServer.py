@@ -99,23 +99,22 @@ maxX, maxY = pyautogui.size()[0] -2, pyautogui.size()[1] -2
 def move_mouse():
     try:
         data = request.get_json()
-        x = data.get('x')
-        y = data.get('y')
-        if x is not None and y is not None:
+        df_x = data.get('x')
+        df_y = data.get('y')
+        if df_x is not None and df_y is not None:
             cur_x, cur_y = pyautogui.position()
-            scaleX = f(abs(x))
-            scaleY = f(abs(y))
-            x *= scaleX
-            y *= scaleY
+            if -2.5 > df_x or df_x > 2.5 : df_x *= f(abs(df_x))
+            if -2.5 > df_y or df_y > 2.5 : df_y *= f(abs(df_y))
 
-            newX, newY = cur_x + x, cur_y + y
+            newX, newY = cur_x + df_x, cur_y + df_y
             newX, newY = min(max(newX, 1), maxX), min(max(newY, 1), maxY)
 
             pyautogui.moveTo( newX, newY )
-            return jsonify({"status": "success", "message": f"Mouse moved to ({x}, {y})   {pyautogui.position()}"}), 200
+            return jsonify({"status": "success", "message": f"Mouse moved to ({newX}, {newY})   {pyautogui.position()}"}), 200
         else:
             return jsonify({"status": "error", "message": "Invalid coordinates"}), 400
     except Exception as e:
+        print(e)
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/scroll', methods=['POST'])
