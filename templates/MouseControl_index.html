@@ -6,8 +6,14 @@
   <title>Mouse Control</title>
 
 <style>
+  *{
+    box-sizing: border-box;
+  }
   html, body {
     overscroll-behavior-x: none;
+    touch-action: manipulation; /*disable iphone to zoom in*/
+    padding:0;
+    margin: 0;
   }
   .green{
     background-color: #04AA6D;
@@ -28,7 +34,7 @@
   <h1>Control the Mouse</h1>
 
   <div><label>mouseStep:</label> <input type="text" id="IP" value="10" oninput="onScaleChange()"></div>
-  <div><label>TouchpadInterval:</label> <input type="text" id="touchpadinterval" value="10" oninput="onTouchpadIntervalChange()"></div>
+  <div><label>touchpadTriggerInterval:</label> <input type="text" id="touchpadinterval" value="10" oninput="onTouchpadIntervalChange()"></div>
 
   <div class="multi-buttons">
     <button class="button" onclick="moveMouse(100, 200)">Move to (100, 200)</button>
@@ -47,7 +53,7 @@
   </div>
 
   <div>
-    <button onclick="clickMouse()" style="height:150px; width:100%; margin-right: 40px; margin-bottom: 5px;">Click Mouse</button>
+    <button onclick="clickMouse()" style="height:150px; width:100%; margin-bottom: 5px;">Click Mouse</button>
   </div>
 
   <!--
