@@ -1,10 +1,14 @@
 from flask import Flask, request, jsonify, render_template
+from flask_socketio import SocketIO
 import pyautogui
 from pandas.io.clipboard import clipboard_get, clipboard_set
 
 app = Flask(__name__)
 
 SCALE = 10
+clients = set()  # Store connected clients
+
+socketio = SocketIO(app)
 
 # API route to move the mouse
 @app.route('/up', methods=['GET'])
@@ -65,7 +69,10 @@ def right():
             X,Y = pyautogui.size()
             x = min(x,X)
             pyautogui.moveTo(x, y)
-            return jsonify({"status": "success", "message": f"Mouse moved to ({x}, {y})"}), 200
+            response = jsonify({"status": "success", "message": f"Mouse moved to ({x}, {y})"})
+            response.headers["Connection"] = "keep-alive"
+            response.headers["Keep-Alive"] = "timeout=10, max=100"
+            return response, 200
         else:
             return jsonify({"status": "error", "message": "Invalid coordinates"}), 400
     except Exception as e:
@@ -182,7 +189,20 @@ def log_request():
     client_ip = request.remote_addr
     #print(f"New request from: {client_ip}, Client Port: {request.environ['REMOTE_PORT']}")
 
+@socketio.on("connect")
+def handle_connect():
+    client_ip = request.remote_addr
+    clients.add(client_ip)
+    print(f"Client {client_ip} connected. Total connections: {len(clients)}")
+
+@socketio.on("disconnect")
+def handle_disconnect():
+    client_ip = request.remote_addr
+    clients.discard(client_ip)
+    print(f"Client {client_ip} disconnected. Total connections: {len(clients)}")
+
 if __name__ == '__main__':
     # Command: python MouseControlServer.py
     # Run the Flask app on the local network
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # app.run(host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)

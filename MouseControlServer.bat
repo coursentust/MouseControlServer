@@ -1,1 +1,2 @@
 python MouseControlServer.py
+pause
