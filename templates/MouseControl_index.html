@@ -103,35 +103,34 @@
     }
     function log(msg) {
         const container = document.getElementById("log");
+        if(typeof msg === "object" && msg !== null){
+            msg = JSON.stringify(msg, null, 2);
+        }
         //container.textContent = `${msg} \n${container.textContent}`;
     }
     function up(){
         fetch(
             "http://".concat(window.location.host).concat("/up")
         )
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function down(){
         fetch(
             "http://".concat(window.location.host).concat("/down")
         )
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function left(){
         fetch(
             "http://".concat(window.location.host).concat("/left")
         )
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function right(){
         fetch(
             "http://".concat(window.location.host).concat("/right")
         )
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function onTouchpadIntervalChange(){
         tuochpadInterval = document.getElementById("touchpadinterval").value
@@ -149,7 +148,7 @@
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data)
+            log(data)
             document.getElementById("IP").value = data["scale"]
         });
     }
@@ -164,8 +163,7 @@
             },
             body: JSON.stringify({ x: x, y: y })
         })
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function scroll(y) {
         fetch(
@@ -178,26 +176,23 @@
             },
             body: JSON.stringify({y: y })
         })
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function clickMouse() {
         log("clickMouse")
-        console.log(window.location.host)
-        console.log("http://".concat(window.location.host).concat("/click_mouse"))
+        log(window.location.host)
+        log("http://".concat(window.location.host).concat("/click_mouse"))
         fetch(
             // 'http://localhost:5000/click_mouse'
             "http://".concat(window.location.host).concat("/click_mouse")
             , {
             method: 'POST'
         })
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function getPosition() {
         fetch( "http://".concat(window.location.host).concat("/get_position") )
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function sendkey(key){
         fetch(
@@ -210,8 +205,7 @@
             },
             body: JSON.stringify(key)
         })
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function textOnBlur() {
         const el = document.getElementById("text");
@@ -225,8 +219,7 @@
             },
             body: JSON.stringify({text:el.value})
         })
-        .then(response => response.json())
-        .then(data => console.log(data));
+        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
     function ongoingTouchIndexById(idToFind) {
       for (let i = 0; i < ongoingTouches.length; i++) {

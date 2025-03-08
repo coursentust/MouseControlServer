@@ -58,11 +58,9 @@ def left():
 @app.route('/right', methods=['GET'])
 def right():
     global SCALE
-    print(SCALE)
     try:
         x,y = pyautogui.position()
         x += 1*int(SCALE)
-        print(x)
         if x is not None and y is not None:
             X,Y = pyautogui.size()
             x = min(x,X)
@@ -179,6 +177,10 @@ def sendtext():
 def home():
    return render_template("MouseControl_index.html")
 
+@app.before_request
+def log_request():
+    client_ip = request.remote_addr
+    #print(f"New request from: {client_ip}, Client Port: {request.environ['REMOTE_PORT']}")
 
 if __name__ == '__main__':
     # Command: python MouseControlServer.py
