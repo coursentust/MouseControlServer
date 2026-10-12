@@ -28,13 +28,15 @@
     width: 50%;
     aspect-ratio: 2;
   }
-</style>
-</head>
+  #touchpad{
+    touch-action: none; /*browser never scrolls or zooms while using the touchpad*/
+  }
+</style></head>
 <body>
   <h1>Control the Mouse</h1>
 
   <div><label>mouseStep:</label> <input type="text" id="IP" value="10" oninput="onScaleChange()"></div>
-  <div><label>touchpadTriggerInterval:</label> <input type="text" id="touchpadinterval" value="10" oninput="onTouchpadIntervalChange()"></div>
+  <div><label>touchpadSensitivity:</label> <input type="text" id="sensitivity" value="1" oninput="onSensitivityChange()"></div>
 
   <div class="multi-buttons">
     <button class="button" onclick="moveMouse(100, 200)">Move to (100, 200)</button>
@@ -93,14 +95,15 @@
     <pre id="log" style="border: 1px solid #ccc;"></pre>
   </div>
   <script>
-    const ongoingTouches = [];
-    var touchStartX;
-    var tuochpadInterval = localStorage['tuochpadInterval'];
-    if( tuochpadInterval == undefined){
-        tuochpadInterval = 10
-    }else{
-        document.getElementById("touchpadinterval").value = tuochpadInterval
-    }
+    const TAP_MAX_MS = 250;   // a touch shorter than this...
+    const TAP_MAX_MOVE = 10;  // ...that moved less than this (px) is a click
+    var ws = null;             // touchpad websocket, falls back to HTTP while not open
+    const lastPos = new Map(); // touch identifier -> {x, y} last seen
+    var gesture = null;        // {start, fingers, moved} from first finger down to last finger up
+    var accX = 0, accY = 0, accScroll = 0; // movement not sent yet
+    var frameQueued = false, inFlight = false;
+    var sensitivity = parseFloat(localStorage['sensitivity']) || 1;
+    document.getElementById("sensitivity").value = sensitivity;
     function log(msg) {
         const container = document.getElementById("log");
         if(typeof msg === "object" && msg !== null){
@@ -132,9 +135,12 @@
         )
         .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
-    function onTouchpadIntervalChange(){
-        tuochpadInterval = document.getElementById("touchpadinterval").value
-        localStorage['tuochpadInterval'] = tuochpadInterval;
+    function onSensitivityChange(){
+        const v = parseFloat(document.getElementById("sensitivity").value);
+        if (v > 0) {
+            sensitivity = v;
+            localStorage['sensitivity'] = v;
+        }
     }
     function onScaleChange(){
         fetch(
@@ -165,30 +171,34 @@
         })
         .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
-    function scroll(y) {
-        fetch(
-            // 'http://localhost:5000/scroll'
-            "http://".concat(window.location.host).concat("/scroll")
+    function connectWs() {
+        ws = new WebSocket("ws://".concat(window.location.host).concat("/ws"));
+        ws.onopen = () => log("websocket connected");
+        ws.onclose = () => {
+            log("websocket closed, reconnect in 1s");
+            setTimeout(connectWs, 1000);
+        };
+    }
+    // touchpad events go over the websocket when connected, otherwise over HTTP
+    function send(event, data, path) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({t: event, ...data}));
+            return Promise.resolve();
+        }
+        return fetch(
+            "http://".concat(window.location.host).concat(path)
             , {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({y: y })
+            body: JSON.stringify(data)
         })
         .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
-    function clickMouse() {
-        log("clickMouse")
-        log(window.location.host)
-        log("http://".concat(window.location.host).concat("/click_mouse"))
-        fetch(
-            // 'http://localhost:5000/click_mouse'
-            "http://".concat(window.location.host).concat("/click_mouse")
-            , {
-            method: 'POST'
-        })
-        .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
+    function clickMouse(button = "left") {
+        log(`clickMouse ${button}`)
+        send("click", {button: button}, "/click_mouse");
     }
     function getPosition() {
         fetch( "http://".concat(window.location.host).concat("/get_position") )
@@ -221,100 +231,94 @@
         })
         .then(response => response.json()).then(data => log(data)).catch(error => log(error.message));
     }
-    function ongoingTouchIndexById(idToFind) {
-      for (let i = 0; i < ongoingTouches.length; i++) {
-        const id = ongoingTouches[i].identifier;
-        if (id === idToFind) {
-          return i;
-        }
+    function queueFlush() {
+      if (!frameQueued) {
+        frameQueued = true;
+        requestAnimationFrame(flush);
       }
-      return -1; // not found
     }
-    function copyTouch({ identifier, pageX, pageY }) {
-      return { identifier, pageX, pageY,  };
+    // send what moved since last frame, at most once per frame
+    function flush() {
+      frameQueued = false;
+      if (inFlight) return; // slow HTTP request still running, keep accumulating; it flushes when done
+      const jobs = [];
+      if (accX || accY) {
+        jobs.push(send("move", {x: accX, y: accY}, "/move_mouse"));
+        accX = accY = 0;
+      }
+      if (accScroll) {
+        jobs.push(send("scroll", {y: accScroll}, "/scroll"));
+        accScroll = 0;
+      }
+      if (jobs.length == 0) return;
+      inFlight = true;
+      Promise.all(jobs).finally(() => {
+        inFlight = false;
+        if (accX || accY || accScroll) queueFlush();
+      });
     }
     function handleStart(evt) {
       evt.preventDefault();
-      log("touchstart.");
-      const touches = evt.changedTouches;
-      for (let i = 0; i < touches.length; i++) {
-        ongoingTouches.push(copyTouch(touches[i]));
+      for (const t of evt.changedTouches) {
+        lastPos.set(t.identifier, {x: t.clientX, y: t.clientY});
       }
-      if(touches.length == 1){
-        touchStartX = touches[0].pageX;
+      if (gesture == null) {
+        gesture = {start: performance.now(), fingers: 0, moved: 0};
       }
-    }
-    function throttle(func) {
-        let lastCall = 0;
-        return function (...args) {
-            const now = Date.now();
-            if (now - lastCall >= tuochpadInterval) {
-                lastCall = now;
-                func.apply(this, args);
-            }
-        };
+      gesture.fingers = Math.max(gesture.fingers, evt.touches.length);
     }
     function handleMove(evt) {
       evt.preventDefault();
-      const touches = evt.changedTouches;
-      if( touches.length == 1 ){
-          log("move mouse");
-          const ongoingIdx = ongoingTouchIndexById(touches[0].identifier);
-          moveMouse(touches[0].pageX - ongoingTouches[ongoingIdx].pageX,
-                    touches[0].pageY - ongoingTouches[ongoingIdx].pageY);
-          ongoingTouches.splice(ongoingIdx, 1, copyTouch(touches[0])); // swap in the new touch record
-          log(`ongoingTouches length=${ongoingTouches.length}`);
+      let dx = 0, dy = 0;
+      for (const t of evt.changedTouches) {
+        const p = lastPos.get(t.identifier);
+        if (p == undefined) continue;
+        dx += t.clientX - p.x;
+        dy += t.clientY - p.y;
+        p.x = t.clientX;
+        p.y = t.clientY;
       }
-      else if( touches.length == 2 ){
-        log("scroll");
-        var diffY = 0;
-        for (let i = 0; i < touches.length; i++) {
-            const ongoingIdx = ongoingTouchIndexById(touches[i].identifier);
-            if (ongoingIdx >= 0) {
-              diffY = diffY + touches[i].pageY - ongoingTouches[ongoingIdx].pageY;
-              //log(`continuing scroll ${ongoingIdx}|diffY=${diffY}`);
-              ongoingTouches.splice(ongoingIdx, 1, copyTouch(touches[i])); // swap in the new touch record
-            } else {
-              log(`not valid ongoingIdx=${ongoingIdx}`);
-            }
-          }
-          scroll(diffY/2);
-      }else{
-        log("handleMove unknown bahavior");
+      if (gesture) gesture.moved += Math.abs(dx) + Math.abs(dy);
+
+      if (evt.touches.length == 1 && gesture && gesture.fingers == 1) {
+        // one finger: move mouse (not when a finger is left over from a two-finger scroll)
+        accX += dx * sensitivity;
+        accY += dy * sensitivity;
+      } else if (evt.touches.length == 2) {
+        // two fingers: scroll by the average of both fingers
+        accScroll += dy / 2;
       }
+      queueFlush();
     }
     function handleEnd(evt) {
       evt.preventDefault(); //prevent browser continuing to process the touch event
-      log(`touchend.`);
-      const touches = evt.changedTouches;
-      if(touches.length == 1 && touchStartX == touches[0].pageX){
-        clickMouse();
+      for (const t of evt.changedTouches) {
+        lastPos.delete(t.identifier);
       }
-      //Must do this, clean ongoingTouches
-      for (let i = 0; i < touches.length; i++) {
-        let idx = ongoingTouchIndexById(touches[i].identifier);
-        //log(`ctx.moveTo( ${ongoingTouches[idx].pageX}, ${ongoingTouches[idx].pageY} );`);
-        //log(`ctx.lineTo( ${touches[i].pageX}, ${touches[i].pageY} );`);
-        if (idx >= 0) {
-          ongoingTouches.splice(idx, 1); // remove it; we're done
-        } else {
-          log("can't figure out which touch to end");
-        }
+      if (evt.touches.length > 0 || gesture == null) return; // wait until all fingers are up
+
+      const isTap = evt.type == "touchend"
+        && performance.now() - gesture.start < TAP_MAX_MS
+        && gesture.moved < TAP_MAX_MOVE;
+      if (isTap) {
+        flush(); // send any pending move before clicking
+        clickMouse(gesture.fingers >= 2 ? "right" : "left");
       }
-      log(`ongoingTouches length=${ongoingTouches.length}`);
+      gesture = null;
     }
     function startTouchDetec() {
       log(`Browser width: ${window.innerWidth}, height: ${window.innerHeight}`);
       //notebook screen size:(1522,792)
       const el = document.getElementById("touchpad");
-      el.addEventListener("touchstart", handleStart);
-      el.addEventListener("touchend", handleEnd);
-      // el.addEventListener("touchcancel", handleCancel);
-      el.addEventListener("touchmove", throttle(handleMove));//ms
+      el.addEventListener("touchstart", handleStart, {passive: false});
+      el.addEventListener("touchmove", handleMove, {passive: false});
+      el.addEventListener("touchend", handleEnd, {passive: false});
+      el.addEventListener("touchcancel", handleEnd, {passive: false});
     }
 
     //stop function define
     document.addEventListener("DOMContentLoaded", startTouchDetec);
+    connectWs();
     </script>
 </body>
 </html>
